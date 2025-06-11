@@ -33,4 +33,5 @@ def draw_unit_cells_with_atoms(ax, points, min_coord=0, max_coord=2):
 
 def plot_crystal_structure(ax, structure):
     if structure == "BCC":
-        points = [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1),
+        points = points = [(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)]
+
