@@ -105,8 +105,8 @@ elif option == "Slip System":
 elif option == "Schmid's Law":
     visualize_schmid()
     st.markdown("---")
-    visualize_schmid()
-
+    visualize_schmid_3d()
+    
 def visualize_schmid_3d():
     st.subheader("Interactive Schmid's Law with 3D Vectors")
 
