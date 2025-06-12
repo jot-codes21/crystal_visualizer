@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-# ========== Crystal Plotting ==========
+# ========== UTILITY ==========
 
 def draw_unit_cells(ax, points, min_coord=0, max_coord=2):
     base_cube = [
@@ -23,13 +23,15 @@ def draw_unit_cells(ax, points, min_coord=0, max_coord=2):
                         [cube[0], cube[1], cube[2], cube[3]],
                         [cube[4], cube[5], cube[6], cube[7]],
                     ]
-                    poly3d = Poly3DCollection(faces, alpha=0.3, facecolor='skyblue', edgecolor='gray')
-                    ax.add_collection3d(poly3d)
+                    ax.add_collection3d(Poly3DCollection(faces, alpha=0.3, facecolor='skyblue', edgecolor='gray'))
 
-def plot_crystal(structure, slip_plane=None, slip_coords=None):
+# ========== CRYSTAL VISUALIZATION ==========
+
+def plot_crystal(structure, slip_coords=None):
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111, projection='3d')
 
+    # Define structure
     if structure == "BCC":
         points = [(0,0,0), (1,1,0), (1,0,1), (0,1,1), (1,0,0), (0,1,0), (0,0,1), (1,1,1), (0.5,0.5,0.5)]
     elif structure == "FCC":
@@ -50,7 +52,7 @@ def plot_crystal(structure, slip_plane=None, slip_coords=None):
     x, y, z = zip(*points)
     ax.scatter(x, y, z, c='r', s=100)
 
-    if slip_plane and slip_coords:
+    if slip_coords:
         poly = Poly3DCollection([slip_coords], alpha=0.5, color='blue')
         ax.add_collection3d(poly)
 
@@ -60,30 +62,30 @@ def plot_crystal(structure, slip_plane=None, slip_coords=None):
     ax.set_title(f"{structure} Crystal Structure")
     st.pyplot(fig)
 
-# ========== Schmid's Law (Basic) ==========
+# ========== SCHMID LAW (TEXT & SLIDER) ==========
 
 def visualize_schmid():
-    st.subheader("Schmid's Law")
-    phi = st.slider("Enter angle between loading direction and slip direction (φ)", 0, 90, 30)
-    lam = st.slider("Enter angle between loading direction and slip plane normal (λ)", 0, 90, 60)
-    sigma = st.number_input("Enter applied stress σ (in N)", value=1000)
+    st.subheader("Schmid's Law - Angle Based")
+    phi = st.slider("Angle φ (between loading and slip direction)", 0, 90, 30)
+    lam = st.slider("Angle λ (between loading and slip plane normal)", 0, 90, 60)
+    sigma = st.number_input("Applied Stress σ (N)", value=1000)
 
     phi_rad = np.radians(phi)
     lam_rad = np.radians(lam)
-
     schmid = sigma * np.cos(phi_rad) * np.cos(lam_rad)
-    st.latex(r"\text{Resolved Shear Stress } = \sigma \cdot \cos\phi \cdot \cos\lambda")
+
+    st.latex(r"\tau = \sigma \cdot \cos\phi \cdot \cos\lambda")
     st.write(f"→ Resolved Shear Stress = {schmid:.2f} N")
 
-# ========== Schmid's Law 3D Vector Visual ==========
+# ========== SCHMID LAW (3D VECTORS) ==========
 
 def visualize_schmid_3d():
-    st.subheader("Interactive Schmid's Law with 3D Vectors")
+    st.subheader("Schmid's Law - 3D Vectors")
 
-    structure = st.selectbox("Select Crystal Structure", ["BCC", "FCC", "SC"])
-    loading_vec = st.text_input("Enter Loading Direction (comma-separated)", "1,0,0")
-    slip_plane_vec = st.text_input("Enter Slip Plane Normal (comma-separated)", "1,1,1")
-    slip_direction_vec = st.text_input("Enter Slip Direction (comma-separated)", "0,1,1")
+    structure = st.selectbox("Crystal Structure", ["BCC", "FCC", "SC"])
+    loading_vec = st.text_input("Loading Direction L (comma-separated)", "1,0,0")
+    slip_plane_vec = st.text_input("Slip Plane Normal N (comma-separated)", "1,1,1")
+    slip_direction_vec = st.text_input("Slip Direction D (comma-separated)", "0,1,1")
     sigma = st.number_input("Applied Stress σ (N)", value=1000)
 
     try:
@@ -91,7 +93,7 @@ def visualize_schmid_3d():
         N = np.array([float(x) for x in slip_plane_vec.split(",")])
         D = np.array([float(x) for x in slip_direction_vec.split(",")])
     except:
-        st.error("Invalid vector input. Use comma-separated numbers like: 1,0,0")
+        st.error("Invalid vector input. Use comma-separated numbers.")
         return
 
     L_norm = L / np.linalg.norm(L)
@@ -100,32 +102,33 @@ def visualize_schmid_3d():
 
     cos_phi = np.dot(L_norm, D_norm)
     cos_lambda = np.dot(L_norm, N_norm)
+    schmid = sigma * cos_phi * cos_lambda
     phi = np.degrees(np.arccos(cos_phi))
     lam = np.degrees(np.arccos(cos_lambda))
-    schmid = sigma * cos_phi * cos_lambda
 
-    st.latex(r"\text{Schmid Factor } = \cos\phi \cdot \cos\lambda")
-    st.write(f"**φ = {phi:.2f}°**, **λ = {lam:.2f}°**, **Resolved Shear Stress = {schmid:.2f} N**")
+    st.latex(r"\tau = \sigma \cdot \cos\phi \cdot \cos\lambda")
+    st.write(f"φ = {phi:.2f}°, λ = {lam:.2f}°")
+    st.success(f"Resolved Shear Stress = {schmid:.2f} N")
 
-    fig = plt.figure(figsize=(8, 8))
+    fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111, projection='3d')
     origin = np.array([0, 0, 0])
-    ax.quiver(*origin, *L_norm, color='r', label="Loading Dir", length=1.2)
-    ax.quiver(*origin, *D_norm, color='g', label="Slip Direction", length=1.2)
-    ax.quiver(*origin, *N_norm, color='b', label="Plane Normal", length=1.2)
+    ax.quiver(*origin, *L_norm, color='red', label='Loading')
+    ax.quiver(*origin, *D_norm, color='green', label='Slip Dir')
+    ax.quiver(*origin, *N_norm, color='blue', label='Plane Normal')
 
     ax.set_xlim([-1, 1])
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
-    ax.set_title("3D Vector Visualization")
+    ax.set_title("Schmid's Law 3D Vector View")
     ax.legend()
     st.pyplot(fig)
 
-# ========== Main App ==========
+# ========== MAIN APP ==========
 
-st.title("Crystal Structure & Slip System Visualizer")
+st.title("Crystal Structure Visualizer with Schmid's Law")
 
-option = st.sidebar.selectbox("Choose What to Visualize", ["Crystal Structure", "Slip System", "Schmid's Law"])
+option = st.sidebar.selectbox("Choose Visualization", ["Crystal Structure", "Slip System", "Schmid's Law"])
 
 if option == "Crystal Structure":
     structure = st.selectbox("Select Crystal Structure", ["BCC", "FCC", "SC", "HCP"])
@@ -139,14 +142,13 @@ elif option == "Slip System":
             "011": [(0,0,0), (0,1,0), (0,1,1), (0,0,1)],
             "112": [(1,0,0), (0,1,0), (0,0,0.5)]
         }
-    else:
+    else:  # FCC
         slip_planes = {
             "111": [(0,0,1), (0,1,0), (1,0,0)],
             "1-11": [(1,0,0), (0,-1,0), (0,0,1)]
         }
-
     plane = st.selectbox("Slip Plane", list(slip_planes.keys()))
-    plot_crystal(structure, slip_plane=plane, slip_coords=slip_planes[plane])
+    plot_crystal(structure, slip_coords=slip_planes[plane])
 
 elif option == "Schmid's Law":
     visualize_schmid()
