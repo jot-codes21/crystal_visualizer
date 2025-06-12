@@ -104,3 +104,54 @@ elif option == "Slip System":
 
 elif option == "Schmid's Law":
     visualize_schmid()
+    st.markdown("---")
+    visualize_schmid()
+
+def visualize_schmid_3d():
+    st.subheader("Interactive Schmid's Law with 3D Vectors")
+
+    structure = st.selectbox("Select Crystal Structure", ["BCC", "FCC", "SC"])
+    loading_vec = st.text_input("Enter Loading Direction (comma-separated)", "1,0,0")
+    slip_plane_vec = st.text_input("Enter Slip Plane Normal (comma-separated)", "1,1,1")
+    slip_direction_vec = st.text_input("Enter Slip Direction (comma-separated)", "0,1,1")
+    sigma = st.number_input("Applied Stress σ (N)", value=1000)
+
+    # Convert input strings to vectors
+    try:
+        L = np.array([float(x) for x in loading_vec.split(",")])
+        N = np.array([float(x) for x in slip_plane_vec.split(",")])
+        D = np.array([float(x) for x in slip_direction_vec.split(",")])
+    except:
+        st.error("Invalid vector input. Use comma-separated numbers like: 1,0,0")
+        return
+
+    # Normalize
+    L_norm = L / np.linalg.norm(L)
+    N_norm = N / np.linalg.norm(N)
+    D_norm = D / np.linalg.norm(D)
+
+    # Compute angles and Schmid Factor
+    cos_phi = np.dot(L_norm, D_norm)
+    cos_lambda = np.dot(L_norm, N_norm)
+    phi = np.degrees(np.arccos(cos_phi))
+    lam = np.degrees(np.arccos(cos_lambda))
+    schmid = sigma * cos_phi * cos_lambda
+
+    st.latex(r"\text{Schmid Factor } = \cos\phi \cdot \cos\lambda")
+    st.write(f"**φ = {phi:.2f}°**, **λ = {lam:.2f}°**, **Resolved Shear Stress = {schmid:.2f} N**")
+
+    # Plot vectors in 3D
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    origin = np.array([0, 0, 0])
+    ax.quiver(*origin, *L_norm, color='r', label="Loading Dir", length=1.2)
+    ax.quiver(*origin, *D_norm, color='g', label="Slip Direction", length=1.2)
+    ax.quiver(*origin, *N_norm, color='b', label="Plane Normal", length=1.2)
+
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+    ax.set_title("3D Vector Visualization")
+    ax.legend()
+    st.pyplot(fig)
+
