@@ -31,7 +31,6 @@ def plot_crystal(structure, slip_coords=None):
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111, projection='3d')
 
-    # Define structure
     if structure == "BCC":
         points = [(0,0,0), (1,1,0), (1,0,1), (0,1,1), (1,0,0), (0,1,0), (0,0,1), (1,1,1), (0.5,0.5,0.5)]
     elif structure == "FCC":
@@ -62,7 +61,7 @@ def plot_crystal(structure, slip_coords=None):
     ax.set_title(f"{structure} Crystal Structure")
     st.pyplot(fig)
 
-# ========== SCHMID LAW (TEXT & SLIDER) ==========
+# ========== SCHMID LAW (ANGLE) ==========
 
 def visualize_schmid():
     st.subheader("Schmid's Law - Angle Based")
@@ -80,7 +79,7 @@ def visualize_schmid():
 # ========== SCHMID LAW (3D VECTORS) ==========
 
 def visualize_schmid_3d():
-    st.subheader("Schmid's Law - 3D Vectors")
+    st.subheader("Schmid's Law - 3D Vector Visualization")
 
     structure = st.selectbox("Crystal Structure", ["BCC", "FCC", "SC"])
     loading_vec = st.text_input("Loading Direction L (comma-separated)", "1,0,0")
@@ -113,29 +112,29 @@ def visualize_schmid_3d():
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111, projection='3d')
     origin = np.array([0, 0, 0])
-    ax.quiver(*origin, *L_norm, color='red', label='Loading')
-    ax.quiver(*origin, *D_norm, color='green', label='Slip Dir')
+    ax.quiver(*origin, *L_norm, color='red', label='Loading Direction')
+    ax.quiver(*origin, *D_norm, color='green', label='Slip Direction')
     ax.quiver(*origin, *N_norm, color='blue', label='Plane Normal')
 
     ax.set_xlim([-1, 1])
     ax.set_ylim([-1, 1])
     ax.set_zlim([-1, 1])
-    ax.set_title("Schmid's Law 3D Vector View")
+    ax.set_title("3D Vector Representation")
     ax.legend()
     st.pyplot(fig)
 
 # ========== MAIN APP ==========
 
-st.title("Crystal Structure Visualizer with Schmid's Law")
+st.title("🔬 Crystal Plasticity Visualizer")
 
-option = st.sidebar.selectbox("Choose Visualization", ["Crystal Structure", "Slip System", "Schmid's Law"])
+option = st.sidebar.radio("Select Module", ["Crystal Structure", "Slip System", "Schmid's Law"])
 
 if option == "Crystal Structure":
     structure = st.selectbox("Select Crystal Structure", ["BCC", "FCC", "SC", "HCP"])
     plot_crystal(structure)
 
 elif option == "Slip System":
-    structure = st.selectbox("Structure", ["BCC", "FCC"])
+    structure = st.selectbox("Select Structure", ["BCC", "FCC"])
     if structure == "BCC":
         slip_planes = {
             "001": [(0,0,1), (1,0,1), (1,1,1), (0,1,1)],
@@ -147,10 +146,13 @@ elif option == "Slip System":
             "111": [(0,0,1), (0,1,0), (1,0,0)],
             "1-11": [(1,0,0), (0,-1,0), (0,0,1)]
         }
-    plane = st.selectbox("Slip Plane", list(slip_planes.keys()))
+    plane = st.selectbox("Choose Slip Plane", list(slip_planes.keys()))
     plot_crystal(structure, slip_coords=slip_planes[plane])
 
 elif option == "Schmid's Law":
-    visualize_schmid()
-    st.markdown("---")
-    visualize_schmid_3d()
+    st.markdown("### Choose Mode")
+    mode = st.radio("Mode", ["Angle Based", "3D Vector Based"])
+    if mode == "Angle Based":
+        visualize_schmid()
+    else:
+        visualize_schmid_3d()
