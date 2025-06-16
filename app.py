@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-# ========== UTILITY ==========
+# ========== UTILITY FUNCTION ==========
 
 def draw_unit_cells(ax, points, min_coord=0, max_coord=2):
     base_cube = [
@@ -25,7 +25,7 @@ def draw_unit_cells(ax, points, min_coord=0, max_coord=2):
                     ]
                     ax.add_collection3d(Poly3DCollection(faces, alpha=0.3, facecolor='skyblue', edgecolor='gray'))
 
-# ========== CRYSTAL VISUALIZATION ==========
+# ========== CRYSTAL STRUCTURE PLOT ==========
 
 def plot_crystal(structure, slip_coords=None):
     fig = plt.figure(figsize=(8, 8))
@@ -39,7 +39,8 @@ def plot_crystal(structure, slip_coords=None):
     elif structure == "SC":
         points = [(i,j,k) for i in range(2) for j in range(2) for k in range(2)]
     elif structure == "HCP":
-        a = 1; c = 1.633 * a
+        a = 1
+        c = 1.633 * a
         points = [(0, 0, 0), (1, 0, 0), (0.5, np.sqrt(3)/2, 0), 
                   (0, 0, c), (1, 0, c), (0.5, np.sqrt(3)/2, c),
                   (0.5, np.sqrt(3)/6, c/2), (1.5, np.sqrt(3)/6, c/2)]
@@ -48,8 +49,9 @@ def plot_crystal(structure, slip_coords=None):
 
     draw_unit_cells(ax, points)
 
-    x, y, z = zip(*points)
-    ax.scatter(x, y, z, c='r', s=100)
+    if points:
+        x, y, z = zip(*points)
+        ax.scatter(x, y, z, c='r', s=100)
 
     if slip_coords:
         poly = Poly3DCollection([slip_coords], alpha=0.5, color='blue')
@@ -61,7 +63,7 @@ def plot_crystal(structure, slip_coords=None):
     ax.set_title(f"{structure} Crystal Structure")
     st.pyplot(fig)
 
-# ========== SCHMID LAW (ANGLE) ==========
+# ========== SCHMID LAW (ANGLE BASED) ==========
 
 def visualize_schmid():
     st.subheader("Schmid's Law - Angle Based")
@@ -76,7 +78,7 @@ def visualize_schmid():
     st.latex(r"\tau = \sigma \cdot \cos\phi \cdot \cos\lambda")
     st.write(f"→ Resolved Shear Stress = {schmid:.2f} N")
 
-# ========== SCHMID LAW (3D VECTORS) ==========
+# ========== SCHMID LAW (3D VECTOR BASED) ==========
 
 def visualize_schmid_3d():
     st.subheader("Schmid's Law - 3D Vector Visualization")
@@ -112,7 +114,7 @@ def visualize_schmid_3d():
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111, projection='3d')
     origin = np.array([0, 0, 0])
-    ax.quiver(*origin, *L_norm, color='red', label='Loading Direction')
+    ax.quiver(*origin, *L_norm, color='red', label='Loading')
     ax.quiver(*origin, *D_norm, color='green', label='Slip Direction')
     ax.quiver(*origin, *N_norm, color='blue', label='Plane Normal')
 
@@ -123,7 +125,7 @@ def visualize_schmid_3d():
     ax.legend()
     st.pyplot(fig)
 
-# ========== MAIN APP ==========
+# ========== MAIN STREAMLIT APP ==========
 
 st.title("🔬 Crystal Plasticity Visualizer")
 
