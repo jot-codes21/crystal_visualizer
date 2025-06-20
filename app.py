@@ -37,18 +37,21 @@ def plot_crystal(structure, slip_coords=None):
     if slip_coords:
         xs, ys, zs = zip(*slip_coords)
         fig.add_trace(go.Mesh3d(x=xs, y=ys, z=zs, color='blue', opacity=0.5))
+fig.update_layout(
+    title=f"{structure} Crystal Structure (Interactive)",
+    scene=dict(
+        xaxis=dict(range=[0, 2], backgroundcolor="white", gridcolor="lightgrey", title='X'),
+        yaxis=dict(range=[0, 2], backgroundcolor="white", gridcolor="lightgrey", title='Y'),
+        zaxis=dict(range=[0, 2], backgroundcolor="white", gridcolor="lightgrey", title='Z'),
+        bgcolor="white"
+    ),
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    margin=dict(l=10, r=10, b=10, t=40),
+    showlegend=True
+)
 
-    fig.update_layout(
-        title=f"{structure} Crystal Structure (Interactive)",
-        scene=dict(
-            xaxis=dict(range=[0, 2]),
-            yaxis=dict(range=[0, 2]),
-            zaxis=dict(range=[0, 2]),
-        ),
-        margin=dict(l=0, r=0, b=0, t=30)
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=True)
 
 # ========== SCHMID'S LAW (ANGLE BASED) ==========
 
@@ -105,14 +108,21 @@ def visualize_schmid_3d():
                                mode='lines+text', line=dict(color='green', width=5), name='Slip Direction'))
     fig.add_trace(go.Scatter3d(x=[0, N_norm[0]], y=[0, N_norm[1]], z=[0, N_norm[2]],
                                mode='lines+text', line=dict(color='blue', width=5), name='Plane Normal'))
+fig.update_layout(
+    title="3D Vector Representation",
+    scene=dict(
+        xaxis=dict(range=[-1, 1], backgroundcolor="white", gridcolor="lightgrey", title='X'),
+        yaxis=dict(range=[-1, 1], backgroundcolor="white", gridcolor="lightgrey", title='Y'),
+        zaxis=dict(range=[-1, 1], backgroundcolor="white", gridcolor="lightgrey", title='Z'),
+        bgcolor="white"
+    ),
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    margin=dict(l=0, r=0, b=0, t=30),
+    showlegend=True
+)
 
-    fig.update_layout(
-        title="3D Vector Representation",
-        scene=dict(xaxis=dict(range=[-1, 1]), yaxis=dict(range=[-1, 1]), zaxis=dict(range=[-1, 1])),
-        margin=dict(l=0, r=0, b=0, t=30),
-        legend=dict(x=0.7, y=0.9)
-    )
-    st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=True)
 
 # ========== MAIN STREAMLIT APP ==========
 
