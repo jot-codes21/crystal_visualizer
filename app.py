@@ -1,36 +1,10 @@
 import streamlit as st
-import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-
-# ========== UTILITY FUNCTION ==========
-
-def draw_unit_cells(ax, points, min_coord=0, max_coord=2):
-    base_cube = [
-        (0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0),
-        (0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1)
-    ]
-    for i in range(min_coord, max_coord):
-        for j in range(min_coord, max_coord):
-            for k in range(min_coord, max_coord):
-                if any(i <= x < i+1 and j <= y < j+1 and k <= z < k+1 for x, y, z in points):
-                    cube = [(x+i, y+j, z+k) for x, y, z in base_cube]
-                    faces = [
-                        [cube[0], cube[1], cube[5], cube[4]],
-                        [cube[2], cube[3], cube[7], cube[6]],
-                        [cube[0], cube[3], cube[7], cube[4]],
-                        [cube[1], cube[2], cube[6], cube[5]],
-                        [cube[0], cube[1], cube[2], cube[3]],
-                        [cube[4], cube[5], cube[6], cube[7]],
-                    ]
-                    ax.add_collection3d(Poly3DCollection(faces, alpha=0.3, facecolor='skyblue', edgecolor='gray'))
+import plotly.graph_objects as go
 
 # ========== CRYSTAL STRUCTURE PLOT ==========
 
 def plot_crystal(structure, slip_coords=None):
-    fig = plt.figure(figsize=(8, 8))
-    ax = fig.add_subplot(111, projection='3d')
-
     if structure == "BCC":
         points = [(0,0,0), (1,1,0), (1,0,1), (0,1,1), (1,0,0), (0,1,0), (0,0,1), (1,1,1), (0.5,0.5,0.5)]
     elif structure == "FCC":
@@ -41,29 +15,42 @@ def plot_crystal(structure, slip_coords=None):
     elif structure == "HCP":
         a = 1
         c = 1.633 * a
-        points = [(0, 0, 0), (1, 0, 0), (0.5, np.sqrt(3)/2, 0), 
+        points = [(0, 0, 0), (1, 0, 0), (0.5, np.sqrt(3)/2, 0),
                   (0, 0, c), (1, 0, c), (0.5, np.sqrt(3)/2, c),
                   (0.5, np.sqrt(3)/6, c/2), (1.5, np.sqrt(3)/6, c/2)]
     else:
         points = []
 
-    draw_unit_cells(ax, points)
+    if not points:
+        st.warning("No points to plot.")
+        return
 
-    if points:
-        x, y, z = zip(*points)
-        ax.scatter(x, y, z, c='r', s=100)
+    x, y, z = zip(*points)
+    fig = go.Figure(data=[
+        go.Scatter3d(
+            x=x, y=y, z=z,
+            mode='markers',
+            marker=dict(size=6, color='red')
+        )
+    ])
 
     if slip_coords:
-        poly = Poly3DCollection([slip_coords], alpha=0.5, color='blue')
-        ax.add_collection3d(poly)
+        xs, ys, zs = zip(*slip_coords)
+        fig.add_trace(go.Mesh3d(x=xs, y=ys, z=zs, color='blue', opacity=0.5))
 
-    ax.set_xlim(0, 2)
-    ax.set_ylim(0, 2)
-    ax.set_zlim(0, 2)
-    ax.set_title(f"{structure} Crystal Structure")
-    st.pyplot(fig)
+    fig.update_layout(
+        title=f"{structure} Crystal Structure (Interactive)",
+        scene=dict(
+            xaxis=dict(range=[0, 2]),
+            yaxis=dict(range=[0, 2]),
+            zaxis=dict(range=[0, 2]),
+        ),
+        margin=dict(l=0, r=0, b=0, t=30)
+    )
 
-# ========== SCHMID LAW (ANGLE BASED) ==========
+    st.plotly_chart(fig, use_container_width=True)
+
+# ========== SCHMID'S LAW (ANGLE BASED) ==========
 
 def visualize_schmid():
     st.subheader("Schmid's Law - Angle Based")
@@ -78,7 +65,7 @@ def visualize_schmid():
     st.latex(r"\tau = \sigma \cdot \cos\phi \cdot \cos\lambda")
     st.write(f"→ Resolved Shear Stress = {schmid:.2f} N")
 
-# ========== SCHMID LAW (3D VECTOR BASED) ==========
+# ========== SCHMID'S LAW (3D VECTOR) ==========
 
 def visualize_schmid_3d():
     st.subheader("Schmid's Law - 3D Vector Visualization")
@@ -111,19 +98,21 @@ def visualize_schmid_3d():
     st.write(f"φ = {phi:.2f}°, λ = {lam:.2f}°")
     st.success(f"Resolved Shear Stress = {schmid:.2f} N")
 
-    fig = plt.figure(figsize=(6, 6))
-    ax = fig.add_subplot(111, projection='3d')
-    origin = np.array([0, 0, 0])
-    ax.quiver(*origin, *L_norm, color='red', label='Loading')
-    ax.quiver(*origin, *D_norm, color='green', label='Slip Direction')
-    ax.quiver(*origin, *N_norm, color='blue', label='Plane Normal')
+    fig = go.Figure()
+    fig.add_trace(go.Scatter3d(x=[0, L_norm[0]], y=[0, L_norm[1]], z=[0, L_norm[2]],
+                               mode='lines+text', line=dict(color='red', width=5), name='Loading'))
+    fig.add_trace(go.Scatter3d(x=[0, D_norm[0]], y=[0, D_norm[1]], z=[0, D_norm[2]],
+                               mode='lines+text', line=dict(color='green', width=5), name='Slip Direction'))
+    fig.add_trace(go.Scatter3d(x=[0, N_norm[0]], y=[0, N_norm[1]], z=[0, N_norm[2]],
+                               mode='lines+text', line=dict(color='blue', width=5), name='Plane Normal'))
 
-    ax.set_xlim([-1, 1])
-    ax.set_ylim([-1, 1])
-    ax.set_zlim([-1, 1])
-    ax.set_title("3D Vector Representation")
-    ax.legend()
-    st.pyplot(fig)
+    fig.update_layout(
+        title="3D Vector Representation",
+        scene=dict(xaxis=dict(range=[-1, 1]), yaxis=dict(range=[-1, 1]), zaxis=dict(range=[-1, 1])),
+        margin=dict(l=0, r=0, b=0, t=30),
+        legend=dict(x=0.7, y=0.9)
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 # ========== MAIN STREAMLIT APP ==========
 
