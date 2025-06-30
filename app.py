@@ -26,13 +26,32 @@ def plot_crystal(structure, slip_coords=None):
         return
 
     x, y, z = zip(*points)
-    fig = go.Figure(data=[
-        go.Scatter3d(x=x, y=y, z=z, mode='markers', marker=dict(size=6, color='red'))
-    ])
+    fig = go.Figure()
 
+    # Atom points
+    fig.add_trace(go.Scatter3d(
+        x=x, y=y, z=z, mode='markers',
+        marker=dict(size=6, color='red'),
+        name='Atoms'
+    ))
+
+    # Visualize slip plane + direction if provided
     if slip_coords:
-        xs, ys, zs = zip(*slip_coords)
-        fig.add_trace(go.Mesh3d(x=xs, y=ys, z=zs, color='blue', opacity=0.5))
+        if len(slip_coords) >= 3:
+            xs, ys, zs = zip(*slip_coords[:-2])
+            fig.add_trace(go.Mesh3d(
+                x=xs, y=ys, z=zs,
+                color='blue', opacity=0.5,
+                name='Slip Plane'
+            ))
+
+        if len(slip_coords) >= 2:
+            p1, p2 = slip_coords[-2], slip_coords[-1]
+            fig.add_trace(go.Scatter3d(
+                x=[p1[0], p2[0]], y=[p1[1], p2[1]], z=[p1[2], p2[2]],
+                mode='lines', line=dict(color='green', width=5),
+                name='Slip Direction'
+            ))
 
     fig.update_layout(
         title=f"{structure} Crystal Structure (Interactive)",
@@ -133,19 +152,40 @@ if option == "Crystal Structure":
 
 elif option == "Slip System":
     structure = st.selectbox("Select Structure", ["BCC", "FCC"])
+
     if structure == "BCC":
         slip_planes = {
-            "001": [(0,0,1), (1,0,1), (1,1,1), (0,1,1)],
-            "011": [(0,0,0), (0,1,0), (0,1,1), (0,0,1)],
-            "112": [(1,0,0), (0,1,0), (0,0,0.5)]
+            "110": [(0,0,0), (1,0,0), (1,1,0), (0,1,0)]
+        }
+        slip_directions = {
+            "110": {
+                "[111]": (1,1,1),
+                "[1-11]": (1,-1,1)
+            }
         }
     else:
         slip_planes = {
-            "111": [(0,0,1), (0,1,0), (1,0,0)],
-            "1-11": [(1,0,0), (0,-1,0), (0,0,1)]
+            "111": [(0,0,0), (1,0,0), (0.5,0.5,np.sqrt(2)/2)]
         }
+        slip_directions = {
+            "111": {
+                "[110]": (1,1,0),
+                "[-101]": (-1,0,1)
+            }
+        }
+
     plane = st.selectbox("Choose Slip Plane", list(slip_planes.keys()))
-    plot_crystal(structure, slip_coords=slip_planes[plane])
+    direction = st.selectbox("Choose Slip Direction", list(slip_directions[plane].keys()))
+
+    slip_vec = slip_directions[plane][direction]
+    plane_coords = slip_planes[plane]
+
+    # Optional: scale direction to fit in cube
+    scaled_vec = tuple(0.5 * i for i in slip_vec)
+    slip_coords = plane_coords + [(0, 0, 0), scaled_vec]
+    plot_crystal(structure, slip_coords=slip_coords)
+
+    st.markdown(f"**Example Slip System:** Plane {plane}, Direction {direction}")
 
 elif option == "Schmid's Law":
     st.markdown("### Choose Mode")
