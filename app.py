@@ -274,42 +274,33 @@ elif option == "Tutorials":
 
     These tutorials:
     - show slip systems from FCC and BCC
-    - ask MCQs about the resolved shear stress
+    - let you solve τ on your own
     - check whether slip systems activate above a given CRSS
+    Click "Show Answer" only when you're ready!
     """)
 
     # ------------------------------------
-    # ------- Tutorial 1 (MCQ) -----------
+    # ------- Tutorial 1 -----------------
     # ------------------------------------
 
     st.header("Tutorial 1: Single FCC Example")
 
-    # Tutorial 1 data
     t1_plane = "{111}"
     t1_direction = "[1 1 0]"
     t1_loading = np.array([1, 1, 1])
     t1_sigma = 250.0
 
-    # Calculate true τ
     D = np.array(fcc_slip_directions[t1_plane][t1_direction])
     N = np.cross(D, [0, 0, 1])
     if np.linalg.norm(N) == 0:
         N = np.array([1, 1, 1])
-    N_unit = N / np.linalg.norm(N)
     D_unit = D / np.linalg.norm(D)
+    N_unit = N / np.linalg.norm(N)
     L_unit = t1_loading / np.linalg.norm(t1_loading)
+
     cos_phi = np.dot(L_unit, D_unit)
     cos_lambda = np.dot(L_unit, N_unit)
     tau_t1 = t1_sigma * cos_phi * cos_lambda
-
-    # Create MCQ options
-    mcq_t1_options = [
-        f"{tau_t1 + 50:.2f} MPa",
-        f"{tau_t1 - 50:.2f} MPa",
-        f"{tau_t1:.2f} MPa",      # correct answer
-        f"{tau_t1 + 100:.2f} MPa"
-    ]
-    np.random.shuffle(mcq_t1_options)
 
     st.markdown(f"""
     - Crystal: **FCC**
@@ -318,30 +309,18 @@ elif option == "Tutorials":
     - Loading direction: **{t1_loading.tolist()}**
     - Applied stress σ = {t1_sigma} MPa
 
-    **What is the resolved shear stress τ?**
+    **Compute the resolved shear stress τ.**
     """)
 
-    user_t1 = st.radio(
-        "Choose the correct τ:",
-        mcq_t1_options,
-        key="tutorial1"
-    )
+    if st.button("Show Answer for Tutorial 1"):
+        st.success(f"✅ τ = {tau_t1:.2f} MPa")
 
-    if st.button("Check Answer for Tutorial 1"):
-        if not user_t1:
-            st.warning("Please select an option.")
-        elif user_t1 == f"{tau_t1:.2f} MPa":
-            st.success("✅ Correct!")
-        else:
-            st.error(f"❌ Oops! The correct answer is {tau_t1:.2f} MPa.")
 
     # ------------------------------------
-    # ------- Tutorial 2 (MCQs) ----------
+    # ------- Tutorial 2 -----------------
     # ------------------------------------
 
     st.header("Tutorial 2: Multiple Systems")
-
-    st.markdown("Below are **3 slip systems** from FCC and BCC. Pick the resolved shear stress for each.")
 
     tutorial_examples = [
         {
@@ -367,12 +346,12 @@ elif option == "Tutorials":
         }
     ]
 
-    for i, example in enumerate(tutorial_examples, 1):
-        structure = example["structure"]
-        plane = example["plane"]
-        direction = example["direction"]
-        loading = example["loading"]
-        sigma = example["sigma"]
+    for i, ex in enumerate(tutorial_examples, 1):
+        structure = ex["structure"]
+        plane = ex["plane"]
+        direction = ex["direction"]
+        loading = ex["loading"]
+        sigma = ex["sigma"]
 
         if structure == "FCC":
             D = np.array(fcc_slip_directions[plane][direction])
@@ -388,43 +367,25 @@ elif option == "Tutorials":
         D_unit = D / np.linalg.norm(D)
         N_unit = N / np.linalg.norm(N)
         L_unit = loading / np.linalg.norm(loading)
+
         cos_phi = np.dot(L_unit, D_unit)
         cos_lambda = np.dot(L_unit, N_unit)
         tau = sigma * cos_phi * cos_lambda
 
-        # Build MCQ options
-        options = [
-            f"{tau + 30:.2f} MPa",
-            f"{tau - 30:.2f} MPa",
-            f"{tau:.2f} MPa",
-            f"{tau + 60:.2f} MPa"
-        ]
-        np.random.shuffle(options)
-
         st.markdown(f"""
         **System {i}:**
-        - Crystal: {structure}
-        - Slip Plane: {plane}
-        - Slip Direction: {direction}
-        - Loading: {loading.tolist()}
-        - Applied Stress: {sigma} MPa
+        - Crystal: **{structure}**
+        - Slip plane: **{plane}**
+        - Slip direction: **{direction}**
+        - Loading direction: **{loading.tolist()}**
+        - Applied stress σ = {sigma} MPa
 
-        **Choose τ:**
+        **Compute the resolved shear stress τ.**
         """)
 
-        user_ans = st.radio(
-            f"Select τ for System {i}",
-            options,
-            key=f"tutorial2_system{i}"
-        )
+        if st.button(f"Show Answer for System {i}"):
+            st.success(f"✅ τ = {tau:.2f} MPa")
 
-        if st.button(f"Check Answer for System {i}"):
-            if not user_ans:
-                st.warning("Please select an option.")
-            elif user_ans == f"{tau:.2f} MPa":
-                st.success("✅ Correct!")
-            else:
-                st.error(f"❌ Oops! Correct τ is {tau:.2f} MPa.")
 
     # ------------------------------------
     # ------- Tutorial 3 -----------------
@@ -432,9 +393,11 @@ elif option == "Tutorials":
 
     st.header("Tutorial 3: CRSS Activation Check")
 
-    st.markdown("""
-    Let's assume a critical resolved shear stress (CRSS) of **300 MPa**.  
-    Which slip systems below will be activated (i.e. τ ≥ CRSS)?
+    crss_value = 100.0  # MPa → lower value so more than one activates
+
+    st.markdown(f"""
+    Let's assume a critical resolved shear stress (CRSS) of **{crss_value} MPa**.  
+    Check which slip systems below will be activated (i.e. τ ≥ CRSS).
     """)
 
     systems_t3 = [
@@ -462,7 +425,7 @@ elif option == "Tutorials":
     ]
 
     activated_systems = []
-    descriptions = []
+    results_text = []
     for s in systems_t3:
         struct = s["structure"]
         plane = s["plane"]
@@ -484,38 +447,33 @@ elif option == "Tutorials":
         D_unit = D / np.linalg.norm(D)
         N_unit = N / np.linalg.norm(N)
         L_unit = loading / np.linalg.norm(loading)
+
         cos_phi = np.dot(L_unit, D_unit)
         cos_lambda = np.dot(L_unit, N_unit)
         tau = sigma * cos_phi * cos_lambda
 
         desc = f"{struct} - Plane {plane}, Dir {direction}"
-        descriptions.append(desc)
-
-        if tau >= 300.0:
+        if tau >= crss_value:
             activated_systems.append(desc)
-
-    user_t3 = st.multiselect(
-        "Select slip systems that will activate (τ ≥ 300 MPa):",
-        descriptions,
-        key="tutorial3"
-    )
-
-    check_t3 = st.button("Check Answer for Tutorial 3")
-
-    if check_t3:
-        if not user_t3:
-            st.warning("Please select at least one slip system.")
+            status = "ACTIVATED"
         else:
-            user_set = set(user_t3)
-            correct_set = set(activated_systems)
+            status = "NOT activated"
 
-            if user_set == correct_set:
-                st.success("✅ Perfect! You selected all correct systems.")
-            else:
-                st.error("❌ Some selections were incorrect.")
-                if correct_set:
-                    st.markdown("**Correct systems are:**")
-                    for s in correct_set:
-                        st.write(f"- {s}")
-                else:
-                    st.info("No slip systems activate at CRSS = 300 MPa.")
+        results_text.append(f"{desc} → τ = {tau:.2f} MPa → {status}")
+
+    st.markdown("""
+    The systems to evaluate:
+    """)
+    for s in systems_t3:
+        st.markdown(f"""
+        - Crystal: **{s['structure']}**
+        - Slip plane: **{s['plane']}**
+        - Slip direction: **{s['direction']}**
+        - Loading direction: **{s['loading'].tolist()}**
+        - Applied stress σ = **{s['sigma']} MPa**
+        """)
+
+    if st.button("Show Answer for Tutorial 3"):
+        st.success("✅ Here are the activation results:")
+        for line in results_text:
+            st.write(f"- {line}")
