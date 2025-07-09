@@ -107,7 +107,7 @@ st.title("🔬 Crystal Plasticity Visualizer")
 
 option = st.sidebar.radio(
     "Select Module",
-    ["Crystal Structure", "Slip System", "Schmid's Law", "Example Calculation"]
+    ["Crystal Structure", "Slip System", "Schmid's Law", "Example"]
 )
 
 
@@ -171,8 +171,8 @@ elif option == "Schmid's Law":
         visualize_schmid()
     else:
         visualize_schmid_3d()
-elif option == "Example Calculation":
-    st.title("📚 Example Calculation")
+elif option == "Example":
+    st.title("📚 Example of Schmid Law")
 
     st.markdown("""
     Let us consider a **BCC crystal**.
