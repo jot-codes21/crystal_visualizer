@@ -107,8 +107,9 @@ st.title("🔬 Crystal Plasticity Visualizer")
 
 option = st.sidebar.radio(
     "Select Module",
-    ["Crystal Structure", "Slip System", "Schmid's Law", "Example"]
+    ["Crystal Structure", "Slip System", "Schmid's Law", "Example", "Tutorials"]
 )
+
 
 
 if option == "Crystal Structure":
@@ -264,4 +265,127 @@ elif option == "Example":
         )
     )
     st.plotly_chart(fig, use_container_width=True)
+
+elif option == "Tutorials":
+    st.title("🎓 Tutorials")
+
+    st.markdown("""
+    Practice computing the resolved shear stress!
+    
+    In these tutorials, you’ll get:
+    - random slip systems (FCC or BCC)
+    - loading directions
+    - applied stress values
+    
+    Click “Show Answer” to check the τ value. No steps shown.
+    """)
+
+    # ------- Tutorial 1 -------
+    st.header("Tutorial 1: Single FCC Example")
+
+    # Fixed FCC tutorial example
+    t1_plane = "{111}"
+    t1_direction = "[1 1 0]"
+    t1_loading = np.array([1, 1, 1])
+    t1_sigma = 250.0
+
+    # Compute τ
+    D = np.array(fcc_slip_directions[t1_plane][t1_direction])
+    N = np.cross(D, [0, 0, 1])
+    if np.linalg.norm(N) == 0:
+        N = np.array([1, 1, 1])
+    N_unit = N / np.linalg.norm(N)
+    D_unit = D / np.linalg.norm(D)
+    L_unit = t1_loading / np.linalg.norm(t1_loading)
+    cos_phi = np.dot(L_unit, D_unit)
+    cos_lambda = np.dot(L_unit, N_unit)
+    tau_t1 = t1_sigma * cos_phi * cos_lambda
+
+    st.markdown(f"""
+    - Crystal: **FCC**
+    - Slip plane: **{t1_plane}**
+    - Slip direction: **{t1_direction}**
+    - Loading direction: **{t1_loading.tolist()}**
+    - Applied stress σ = {t1_sigma} MPa
+    
+    Can you compute the resolved shear stress τ?
+    """)
+
+    if st.button("Show Answer for Tutorial 1"):
+        st.success(f"✅ Resolved Shear Stress τ = {tau_t1:.2f} MPa")
+
+
+    # ------- Tutorial 2 -------
+    st.header("Tutorial 2: Multiple Systems")
+
+    st.markdown("Below are **3 slip systems** (mix of FCC and BCC). Try calculating τ yourself!")
+
+    # Prepare list of examples
+    tutorial_examples = [
+        {
+            "structure": "FCC",
+            "plane": "{111}",
+            "direction": "[1 0 1]",
+            "loading": np.array([1, 1, 0]),
+            "sigma": 300.0
+        },
+        {
+            "structure": "BCC",
+            "plane": "{110}",
+            "direction": "[1 1 1]",
+            "loading": np.array([0, 0, 1]),
+            "sigma": 200.0
+        },
+        {
+            "structure": "BCC",
+            "plane": "{112}",
+            "direction": "[1 -1 1]",
+            "loading": np.array([1, 0, 0]),
+            "sigma": 100.0
+        }
+    ]
+
+    answers = []
+    for example in tutorial_examples:
+        structure = example["structure"]
+        plane = example["plane"]
+        direction = example["direction"]
+        loading = example["loading"]
+        sigma = example["sigma"]
+
+        # Slip direction
+        if structure == "FCC":
+            D = np.array(fcc_slip_directions[plane][direction])
+            # Generate dummy plane normal (not strictly accurate but fine for tutorial)
+            N = np.cross(D, [0, 0, 1])
+            if np.linalg.norm(N) == 0:
+                N = np.array([1, 1, 1])
+        else:  # BCC
+            D = np.array(bcc_slip_directions[plane][direction])
+            N = np.array(bcc_slip_planes[plane][1]) - np.array(bcc_slip_planes[plane][0])
+            if np.linalg.norm(N) == 0:
+                N = np.array([1, 1, 0])
+
+        # Normalize
+        D_unit = D / np.linalg.norm(D)
+        N_unit = N / np.linalg.norm(N)
+        L_unit = loading / np.linalg.norm(loading)
+
+        cos_phi = np.dot(L_unit, D_unit)
+        cos_lambda = np.dot(L_unit, N_unit)
+        tau = sigma * cos_phi * cos_lambda
+
+        answers.append({
+            "system": f"{structure} - Plane {plane}, Dir {direction}",
+            "tau": tau
+        })
+
+    for i, ans in enumerate(answers, 1):
+        st.markdown(f"""
+        **System {i}:**
+        - Crystal: {ans['system'].split(' - ')[0]}
+        - Slip Plane and Direction: {ans['system'].split(' - ')[1]}
+        """)
+        if st.button(f"Show Answer for System {i}"):
+            st.success(f"✅ Resolved Shear Stress τ = {ans['tau']:.2f} MPa")
 
