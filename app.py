@@ -327,12 +327,13 @@ elif option == "Tutorials":
         key="tutorial1"
     )
 
-    if user_t1:
-        if user_t1 == f"{tau_t1:.2f} MPa":
+    if st.button("Check Answer for Tutorial 1"):
+        if not user_t1:
+            st.warning("Please select an option.")
+        elif user_t1 == f"{tau_t1:.2f} MPa":
             st.success("✅ Correct!")
         else:
             st.error(f"❌ Oops! The correct answer is {tau_t1:.2f} MPa.")
-
 
     # ------------------------------------
     # ------- Tutorial 2 (MCQs) ----------
@@ -417,12 +418,13 @@ elif option == "Tutorials":
             key=f"tutorial2_system{i}"
         )
 
-        if user_ans:
-            if user_ans == f"{tau:.2f} MPa":
+        if st.button(f"Check Answer for System {i}"):
+            if not user_ans:
+                st.warning("Please select an option.")
+            elif user_ans == f"{tau:.2f} MPa":
                 st.success("✅ Correct!")
             else:
                 st.error(f"❌ Oops! Correct τ is {tau:.2f} MPa.")
-
 
     # ------------------------------------
     # ------- Tutorial 3 -----------------
@@ -435,7 +437,6 @@ elif option == "Tutorials":
     Which slip systems below will be activated (i.e. τ ≥ CRSS)?
     """)
 
-    # Define systems to check
     systems_t3 = [
         {
             "structure": "FCC",
@@ -487,21 +488,34 @@ elif option == "Tutorials":
         cos_lambda = np.dot(L_unit, N_unit)
         tau = sigma * cos_phi * cos_lambda
 
-        descriptions.append(f"{struct} - Plane {plane}, Dir {direction}")
-        if tau >= 300.0:
-            activated_systems.append(f"{struct} - Plane {plane}, Dir {direction}")
+        desc = f"{struct} - Plane {plane}, Dir {direction}"
+        descriptions.append(desc)
 
-    # Provide all systems as MCQ
+        if tau >= 300.0:
+            activated_systems.append(desc)
+
     user_t3 = st.multiselect(
         "Select slip systems that will activate (τ ≥ 300 MPa):",
-        descriptions
+        descriptions,
+        key="tutorial3"
     )
 
-    if st.button("Check Answer for Tutorial 3"):
-        user_set = set(user_t3)
-        correct_set = set(activated_systems)
-        if user_set == correct_set:
-            st.success("✅ Perfect! You selected all correct systems.")
+    check_t3 = st.button("Check Answer for Tutorial 3")
+
+    if check_t3:
+        if not user_t3:
+            st.warning("Please select at least one slip system.")
         else:
-            st.error(f"❌ Some selections were incorrect.\n\nCorrect systems are:\n" +
-                     "\n".join(f"- {s}" for s in correct_set))
+            user_set = set(user_t3)
+            correct_set = set(activated_systems)
+
+            if user_set == correct_set:
+                st.success("✅ Perfect! You selected all correct systems.")
+            else:
+                st.error("❌ Some selections were incorrect.")
+                if correct_set:
+                    st.markdown("**Correct systems are:**")
+                    for s in correct_set:
+                        st.write(f"- {s}")
+                else:
+                    st.info("No slip systems activate at CRSS = 300 MPa.")
