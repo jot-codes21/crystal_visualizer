@@ -105,7 +105,11 @@ bcc_slip_directions = {
 
 st.title("🔬 Crystal Plasticity Visualizer")
 
-option = st.sidebar.radio("Select Module", ["Crystal Structure", "Slip System", "Schmid's Law"])
+option = st.sidebar.radio(
+    "Select Module",
+    ["Crystal Structure", "Slip System", "Schmid's Law", "Example Calculation"]
+)
+
 
 if option == "Crystal Structure":
     structure = st.selectbox("Select Crystal Structure", ["FCC", "BCC"])
@@ -167,3 +171,97 @@ elif option == "Schmid's Law":
         visualize_schmid()
     else:
         visualize_schmid_3d()
+elif option == "Example Calculation":
+    st.title("📚 Example Calculation")
+
+    st.markdown("""
+    Let us consider a **BCC crystal**.
+    
+    - Chosen slip plane: {110}
+    - Slip direction: [1 1 1]
+    - Loading direction: [1 0 0]
+    - Applied stress σ = 150 MPa
+    """)
+
+    sigma = 150.0  # MPa
+
+    # Slip plane normal for {110}
+    N = np.array([1, 1, 0])
+    # Slip direction
+    D = np.array([1, 1, 1])
+    # Loading direction
+    L = np.array([1, 0, 0])
+
+    # Normalize vectors
+    N_unit = N / np.linalg.norm(N)
+    D_unit = D / np.linalg.norm(D)
+    L_unit = L / np.linalg.norm(L)
+
+    # Compute angles
+    cos_phi = np.dot(L_unit, D_unit)
+    cos_lambda = np.dot(L_unit, N_unit)
+    phi_deg = np.degrees(np.arccos(cos_phi))
+    lambda_deg = np.degrees(np.arccos(cos_lambda))
+
+    # Schmid factor and shear stress
+    tau = sigma * cos_phi * cos_lambda
+
+    st.subheader("Step-by-Step Calculation")
+
+    st.markdown(f"""
+    - **Slip plane normal (N):** {N.tolist()}
+    - **Slip direction (D):** {D.tolist()}
+    - **Loading direction (L):** {L.tolist()}
+
+    Normalize the vectors:
+
+    - Unit N = {N_unit.round(4).tolist()}
+    - Unit D = {D_unit.round(4).tolist()}
+    - Unit L = {L_unit.round(4).tolist()}
+
+    Compute:
+
+    - cos(φ) = L ⋅ D = {cos_phi:.4f}
+    - cos(λ) = L ⋅ N = {cos_lambda:.4f}
+    - φ = {phi_deg:.2f}°
+    - λ = {lambda_deg:.2f}°
+
+    Calculate resolved shear stress:
+
+    $$
+    \\tau = \\sigma \\times \\cos\\phi \\times \\cos\\lambda
+    $$
+
+    Thus:
+
+    $$
+    \\tau = {sigma:.1f} \\times {cos_phi:.4f} \\times {cos_lambda:.4f} = {tau:.2f} \\text{{ MPa}}
+    $$
+    """)
+
+    st.success(f"✅ **Resolved Shear Stress τ = {tau:.2f} MPa**")
+
+    # Optional vector plot
+    fig = go.Figure()
+    fig.add_trace(go.Scatter3d(
+        x=[0, L_unit[0]], y=[0, L_unit[1]], z=[0, L_unit[2]],
+        mode='lines', name='Loading Dir', line=dict(width=4, color='red')
+    ))
+    fig.add_trace(go.Scatter3d(
+        x=[0, D_unit[0]], y=[0, D_unit[1]], z=[0, D_unit[2]],
+        mode='lines', name='Slip Dir', line=dict(width=4, color='green')
+    ))
+    fig.add_trace(go.Scatter3d(
+        x=[0, N_unit[0]], y=[0, N_unit[1]], z=[0, N_unit[2]],
+        mode='lines', name='Plane Normal', line=dict(width=4, color='blue')
+    ))
+    fig.update_layout(
+        margin=dict(l=0, r=0, b=0, t=30),
+        scene=dict(
+            xaxis_title='X',
+            yaxis_title='Y',
+            zaxis_title='Z',
+        )
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
