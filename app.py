@@ -291,11 +291,10 @@ elif option == "Tutorials":
     t1_sigma = 250.0
 
     D = np.array(fcc_slip_directions[t1_plane][t1_direction])
-    N = np.cross(D, [0, 0, 1])
-    if np.linalg.norm(N) == 0:
-        N = np.array([1, 1, 1])
-    D_unit = D / np.linalg.norm(D)
+    # Correct normal for FCC {111}
+    N = np.array([1, 1, 1])
     N_unit = N / np.linalg.norm(N)
+    D_unit = D / np.linalg.norm(D)
     L_unit = t1_loading / np.linalg.norm(t1_loading)
 
     cos_phi = np.dot(L_unit, D_unit)
@@ -355,9 +354,8 @@ elif option == "Tutorials":
 
         if structure == "FCC":
             D = np.array(fcc_slip_directions[plane][direction])
-            N = np.cross(D, [0, 0, 1])
-            if np.linalg.norm(N) == 0:
-                N = np.array([1, 1, 1])
+            # Correct normal for FCC {111}
+            N = np.array([1, 1, 1])
         else:
             D = np.array(bcc_slip_directions[plane][direction])
             N = np.array(bcc_slip_planes[plane][1]) - np.array(bcc_slip_planes[plane][0])
@@ -393,7 +391,7 @@ elif option == "Tutorials":
 
     st.header("Tutorial 3: CRSS Activation Check")
 
-    crss_value = 100.0  # MPa → lower value so more than one activates
+    crss_value = 100.0  # MPa → ensure multiple activations
 
     st.markdown(f"""
     Let's assume a critical resolved shear stress (CRSS) of **{crss_value} MPa**.  
@@ -426,6 +424,7 @@ elif option == "Tutorials":
 
     activated_systems = []
     results_text = []
+
     for s in systems_t3:
         struct = s["structure"]
         plane = s["plane"]
@@ -435,9 +434,8 @@ elif option == "Tutorials":
 
         if struct == "FCC":
             D = np.array(fcc_slip_directions[plane][direction])
-            N = np.cross(D, [0, 0, 1])
-            if np.linalg.norm(N) == 0:
-                N = np.array([1, 1, 1])
+            # Correct normal for FCC {111}
+            N = np.array([1, 1, 1])
         else:
             D = np.array(bcc_slip_directions[plane][direction])
             N = np.array(bcc_slip_planes[plane][1]) - np.array(bcc_slip_planes[plane][0])
@@ -453,7 +451,7 @@ elif option == "Tutorials":
         tau = sigma * cos_phi * cos_lambda
 
         desc = f"{struct} - Plane {plane}, Dir {direction}"
-        if tau >= crss_value:
+        if abs(tau) >= crss_value:
             activated_systems.append(desc)
             status = "ACTIVATED"
         else:
