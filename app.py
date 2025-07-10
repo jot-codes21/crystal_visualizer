@@ -107,7 +107,7 @@ st.title("🔬 Crystal Plasticity Visualizer")
 
 option = st.sidebar.radio(
     "Select Module",
-    ["Crystal Structure", "Slip System", "Schmid's Law", "Example", "Tutorials"]
+    ["Crystal Structure", "Slip System", "Schmid's Law", "Example", "Tutorials", "Strain Hardening"]
 )
 
 # --------------------------
