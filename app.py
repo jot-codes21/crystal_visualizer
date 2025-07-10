@@ -502,3 +502,70 @@ elif option == "Tutorials":
         st.success("✅ Here are the activation results:")
         for line in results_text:
             st.write(f"- {line}")
+elif option == "Strain Hardening":
+    st.title("💪 Strain Hardening")
+
+    st.markdown("""
+    When metals deform plastically, dislocations move on slip systems.
+
+    **Strain hardening** happens because as more dislocations form,
+    they block each other—making it harder for them to move.
+
+    Think of it like **car traffic**:
+    - Cars = dislocations
+    - Lanes = slip planes
+    - Speed = dislocation velocity
+    - Traffic jam = dislocation forest
+    - Needing more engine power = higher CRSS
+
+    The more dislocations there are, the higher the critical resolved shear stress (CRSS) becomes.
+    """)
+
+    st.subheader("🚗 Traffic Analogy")
+
+    # Traffic photo
+    st.image("traffic.jpg", caption="Few cars = fast dislocation motion")
+
+    st.markdown("""
+    Imagine a highway:
+
+    - Few cars → fast speed (low CRSS)
+    - Lots of cars → traffic jam → cars block each other → need more power to move → high CRSS
+
+    Same in metals:
+    - Few dislocations → easy slip → low CRSS
+    - Many dislocations → blocked paths → higher CRSS
+    """)
+
+    # Dislocation tangle photo
+    st.image("dislocations.jpeg", caption="Tangled dislocations create obstacles")
+
+    st.info("Let's calculate strain hardening for a slip system:")
+
+    structure = st.selectbox("Select Crystal Structure", ["FCC", "BCC"])
+    if structure == "FCC":
+        plane = st.selectbox("Select Slip Plane", list(fcc_slip_planes.keys()))
+        direction = st.selectbox("Select Slip Direction", list(fcc_slip_directions[plane].keys()))
+    else:
+        plane = st.selectbox("Select Slip Plane", list(bcc_slip_planes.keys()))
+        direction = st.selectbox("Select Slip Direction", list(bcc_slip_directions[plane].keys()))
+
+    tau = st.number_input("Resolved Shear Stress τ (MPa)", value=150.0)
+    rho_0 = st.number_input("Initial Dislocation Density ρ₀ (1/m²)", value=1e12, format="%.2e")
+    delta_rho = st.number_input("Increase in Dislocation Density Δρ (1/m²)", value=2e13, format="%.2e")
+    alpha = st.number_input("Material Constant α", value=0.5)
+    G = st.number_input("Shear Modulus G (MPa)", value=26000.0)
+    b = st.number_input("Burgers Vector b (meters)", value=2.5e-10, format="%.2e")
+
+    # Calculate new CRSS
+    rho_new = rho_0 + delta_rho
+    tau_new = tau + alpha * G * b * np.sqrt(rho_new)
+
+    st.markdown(f"""
+    ### 🔎 Results:
+
+    - **New Dislocation Density ρ:** {rho_new:.2e} 1/m²
+    - **New CRSS:** {tau_new:.2f} MPa
+    """)
+
+    st.success(f"✅ The metal is stronger after strain hardening! New CRSS = {tau_new:.2f} MPa")
