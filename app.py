@@ -503,7 +503,7 @@ elif option == "Tutorials":
         for line in results_text:
             st.write(f"- {line}")
 elif option == "Strain Hardening":
-    st.title("💪 Strain Hardening")
+    st.title("Strain Hardening")
 
     st.markdown("""
     When metals deform plastically, dislocations move on slip systems.
@@ -523,8 +523,7 @@ elif option == "Strain Hardening":
 
     st.subheader("🚗 Traffic Analogy")
 
-    # Traffic photo
-    st.image("traffic.jpg", caption="Few cars = fast dislocation motion")
+ 
 
     st.markdown("""
     Imagine a highway:
@@ -536,9 +535,6 @@ elif option == "Strain Hardening":
     - Few dislocations → easy slip → low CRSS
     - Many dislocations → blocked paths → higher CRSS
     """)
-
-    # Dislocation tangle photo
-    st.image("dislocations.jpeg", caption="Tangled dislocations create obstacles")
 
     st.info("Let's calculate strain hardening for a slip system:")
 
